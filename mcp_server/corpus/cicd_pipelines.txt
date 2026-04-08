@@ -1,0 +1,13 @@
+Continuous Integration and Continuous Delivery (CI/CD) automates the software delivery process from code commit to production deployment. CI runs automated builds and tests on every commit. CD automates deployment to staging and production environments.
+
+GitHub Actions is a popular CI/CD platform integrated into GitHub. Workflows are defined in YAML files stored in .github/workflows/. Each workflow contains jobs; each job contains steps that run sequentially on a runner machine.
+
+A typical CI pipeline includes: code checkout, dependency installation, linting (code style), type checking, unit tests, integration tests, security scanning, and coverage reporting. Failing any stage stops the pipeline immediately (fail fast).
+
+Docker multi-stage builds in CI produce optimized images tagged with the commit SHA for immutability. Images are pushed to a container registry (Docker Hub, GHCR, ECR) using credentials stored as GitHub Actions secrets.
+
+The CD stage pulls the new image, deploys it to the target environment, waits for health checks to pass, and rolls back to the previous image if health checks fail within a timeout window.
+
+GitHub Actions reusable workflows allow teams to share common CI/CD logic across repositories. Matrix strategies run the same job with different parameters (e.g., multiple Python versions) in parallel, reducing feedback time.
+
+Build caching stores dependency installations (pip packages, npm modules) between runs using actions/cache. This dramatically reduces build times from minutes to seconds on cached dependencies.

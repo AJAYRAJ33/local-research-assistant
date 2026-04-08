@@ -1,0 +1,13 @@
+Terraform by HashiCorp is the leading Infrastructure as Code tool. It supports 300+ providers (AWS, GCP, Azure, Kubernetes, GitHub) through a provider plugin architecture. Configuration is written in HCL (HashiCorp Configuration Language).
+
+The Terraform workflow: terraform init (download providers), terraform plan (preview changes), terraform apply (apply changes), terraform destroy (tear down). Always review the plan before applying — it shows exactly what will change.
+
+Terraform state tracks real-world resources and their configuration. State is stored locally in terraform.tfstate by default. For teams, use remote state backends (S3, GCS, Terraform Cloud) with state locking to prevent concurrent modifications.
+
+Modules in Terraform are reusable, composable units of configuration. A module encapsulates resources for a specific purpose (e.g., a VPC module, an EKS cluster module). Use published modules from the Terraform Registry to avoid reinventing the wheel.
+
+Terraform workspaces allow multiple state instances from the same configuration — useful for dev/staging/prod environments. Each workspace has its own state file. terraform workspace new staging creates a new workspace.
+
+Remote backends like Terraform Cloud provide collaboration features: remote execution, state management, policy as code (Sentinel), and team access controls. Plans run in Terraform Cloud's infrastructure rather than your local machine.
+
+Best practices: pin provider versions, use remote state, enable state locking, review plans before applying, use modules for repeated patterns, tag all resources consistently, and never store secrets in Terraform files — use environment variables or Vault provider instead.

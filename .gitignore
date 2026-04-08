@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Secrets
+.env
+*.pem
+*.key
+
+# Model artifacts (too large for git — host on HuggingFace Hub)
+merged-model/
+outputs/
+*.gguf
+*.bin
+*.safetensors
+lora-adapter/
+
+# Data
+data/train/
+data/val/
+vector-db/
+
+# Logs
+logs/
+*.jsonl
+eval_results.json
+benchmark_results.json
+
+# Docker
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# llama.cpp clone
+llama.cpp/

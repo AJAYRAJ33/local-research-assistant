@@ -1,0 +1,13 @@
+Docker is a platform for developing, shipping, and running applications in containers. Containers package an application with all its dependencies into a single, portable unit that runs consistently across environments.
+
+A Docker image is a read-only template used to create containers. Images are built from a Dockerfile, which contains a series of instructions. Each instruction creates a new layer in the image. Layers are cached, making subsequent builds faster.
+
+The Dockerfile FROM instruction specifies the base image. RUN executes commands during the build. COPY transfers files from the host. ENV sets environment variables. EXPOSE documents listening ports. CMD or ENTRYPOINT defines the startup command.
+
+Multi-stage builds use multiple FROM statements in one Dockerfile. Earlier stages compile code or install build tools. The final stage copies only the required artifacts, producing a smaller, more secure image without build tools.
+
+Docker Compose orchestrates multi-container applications using a docker-compose.yml file. It defines services, networks, and volumes. A single docker-compose up -d command starts the entire stack.
+
+Container networking allows containers to communicate. The bridge network (default) isolates containers on the same host. Overlay networks span multiple Docker hosts for Swarm mode. Host networking shares the host's network stack directly.
+
+Docker volumes persist data beyond a container's lifecycle. Named volumes are managed by Docker and stored in /var/lib/docker/volumes. Bind mounts link host directories directly into containers, useful for development hot-reload.

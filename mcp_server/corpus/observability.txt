@@ -1,0 +1,13 @@
+Observability is the ability to understand a system's internal state from its external outputs — metrics, logs, and traces. Unlike monitoring (which alerts on known failure modes), observability helps you debug unknown failures.
+
+Prometheus is the de-facto metrics system for Kubernetes. It scrapes /metrics endpoints exposed by applications and Kubernetes components. PromQL is its powerful query language. It stores data as time-series with labels for multi-dimensional queries.
+
+Grafana connects to Prometheus and other data sources to build dashboards. Pre-built Kubernetes dashboards from the Grafana community cover cluster health, namespace resource usage, pod performance, and more. Alerting rules trigger notifications via Slack, PagerDuty, etc.
+
+Structured logging outputs logs as JSON with consistent fields: timestamp, level, service, trace_id, message, and context-specific fields. Structured logs are machine-parseable and easily filtered in tools like Kibana, Loki, or CloudWatch Insights.
+
+Distributed tracing follows a request as it flows through multiple services, assigning a trace ID that spans all hops. Each service records spans with timing data. OpenTelemetry is the standard instrumentation library. Jaeger and Tempo store and visualize traces.
+
+The USE method (Utilization, Saturation, Errors) guides infrastructure analysis: for every resource, check utilization (how busy), saturation (how much queued work), and errors. The RED method (Rate, Errors, Duration) applies to services: request rate, error rate, latency.
+
+Service Level Indicators (SLIs) are quantitative measures of service behavior: availability (% successful requests), latency (p50/p95/p99), throughput (req/sec), and error rate (% failed). SLOs set targets for SLIs; exceeding them burns the error budget.

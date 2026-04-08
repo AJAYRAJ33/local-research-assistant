@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  # ─── Ollama: runs the GGUF model ─────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: lra-ollama
+    volumes:
+      # Point to your 1TB HDD — change path to your actual mount point
+      - ${OLLAMA_MODELS_PATH:-./models}:/root/.ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ─── Inference Server: FastAPI wrapper around Ollama ──────────────────────
+  inference-server:
+    build:
+      context: .
+      dockerfile: inference_server/Dockerfile
+    container_name: lra-inference
+    environment:
+      - OLLAMA_URL=http://localhost:11434
+      - MODEL_NAME=phi3
+    ports:
+      - "8000:8000"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ─── MCP Server: tool server ─────────────────────────────────────────────
+  mcp-server:
+    build:
+      context: .
+      dockerfile: mcp_server/Dockerfile
+    container_name: lra-mcp
+    volumes:
+      - ./vector-db:/app/vector-db
+      - ./corpus:/app/corpus
+    ports:
+      - "8001:8001"
+    depends_on:
+      - inference-server
+    restart: unless-stopped
+
+  # ─── Gradio App: user interface ──────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lra-app
+    environment:
+      - INFERENCE_URL=http://inference-server:8000
+      - MCP_HOST=mcp-server
+      - MCP_PORT=8001
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - inference-server
+      - mcp-server
+    restart: unless-stopped
+
+networks:
+  default:
+    name: lra-network

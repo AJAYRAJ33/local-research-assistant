@@ -1,0 +1,13 @@
+GitOps is a practice where the entire system state is described declaratively in Git, and automated tooling continuously reconciles the running state to match. Git is the single source of truth for both infrastructure and application configuration.
+
+ArgoCD is a declarative GitOps continuous delivery tool for Kubernetes. It watches a Git repository for changes and automatically applies them to the cluster. It provides a web UI to visualize application health and sync status.
+
+Infrastructure as Code (IaC) manages cloud infrastructure through machine-readable files rather than manual processes. Terraform uses HCL to define resources across cloud providers. Running terraform plan previews changes; terraform apply executes them.
+
+Monitoring and observability are essential DevOps practices. Prometheus scrapes metrics from application endpoints and stores them as time-series data. Grafana visualizes these metrics in dashboards. Alertmanager routes alerts to teams.
+
+The three pillars of observability are: metrics (quantitative measurements over time), logs (timestamped records of events), and traces (records of requests flowing through distributed systems). All three are needed for effective debugging.
+
+Site Reliability Engineering (SRE) applies software engineering to infrastructure and operations. SREs define Service Level Indicators (SLIs), set Service Level Objectives (SLOs), and manage error budgets to balance reliability with development velocity.
+
+Security in DevOps (DevSecOps) integrates security practices into every phase of the development lifecycle: scanning dependencies for vulnerabilities, signing container images, enforcing admission policies, and managing secrets with tools like Vault.

@@ -1,0 +1,13 @@
+Site Reliability Engineering (SRE) was developed at Google to apply software engineering to operations. SREs write code to automate toil (repetitive manual work), improve reliability, and build self-healing systems.
+
+Error budgets quantify acceptable unreliability. If an SLO is 99.9% availability, the error budget is 0.1% downtime — about 43 minutes per month. When the budget is exhausted, feature development slows down until reliability improves. This aligns incentives between product and reliability teams.
+
+Toil is manual, repetitive, tactical work that scales linearly with service growth and provides no enduring value. Examples: manually restarting services, responding to the same alert repeatedly, manually provisioning servers. SREs aim to keep toil below 50% of their time.
+
+Incident management follows a structured process: detection (alert fires), triage (severity assessment), mitigation (restore service), investigation (find root cause), postmortem (document and prevent recurrence). The postmortem is blameless — focus on systems, not people.
+
+Postmortems document what happened, the timeline, contributing factors, impact, and action items. Blameless culture is essential: people must feel safe reporting mistakes for the organization to learn from them. Action items have owners and deadlines.
+
+Chaos engineering deliberately injects failures into systems to verify resilience. Netflix's Chaos Monkey randomly terminates EC2 instances. GameDays simulate large-scale failures in controlled conditions. The goal is to find weaknesses before they cause real outages.
+
+On-call rotation ensures someone is always responsible for responding to incidents. Effective on-call requires: runbooks for common alerts, dashboards for quick diagnosis, escalation paths for critical issues, and compensation/time-off to prevent burnout.

@@ -1,0 +1,13 @@
+Kubernetes networking follows four fundamental rules: all pods can communicate with all other pods without NAT, all nodes can communicate with all pods without NAT, the IP a pod sees itself as is the same IP others see it as, and services can reach pods via stable virtual IPs.
+
+Container Network Interface (CNI) plugins implement the Kubernetes network model. Popular choices include Calico (policy-rich), Flannel (simple overlay), Cilium (eBPF-based, high performance), and Weave Net. Each implements pod-to-pod networking differently.
+
+Ingress controllers manage external HTTP/HTTPS traffic routing into the cluster. NGINX Ingress Controller is the most widely used. It reads Ingress resources and configures NGINX accordingly, supporting TLS termination, path-based routing, and virtual hosting.
+
+Network Policies are Kubernetes-native firewall rules for pods. By default, all pod-to-pod communication is allowed. A NetworkPolicy selects pods with label selectors and defines which ingress and egress traffic is permitted. Policies are additive.
+
+Service meshes like Istio and Linkerd add a layer of infrastructure for service-to-service communication. They inject sidecar proxies (Envoy) alongside each pod, handling mTLS encryption, traffic management, circuit breaking, and distributed tracing transparently.
+
+DNS in Kubernetes is provided by CoreDNS. Each Service gets an A record: service-name.namespace.svc.cluster.local. Pods can also get DNS entries. Applications use short names (just the service name within the same namespace) or FQDNs across namespaces.
+
+Load balancing in Kubernetes Services uses iptables or IPVS rules maintained by kube-proxy on each node. IPVS mode is more performant for large clusters. The default algorithm is round-robin; IPVS supports more algorithms including least connections.

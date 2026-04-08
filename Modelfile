@@ -1,0 +1,24 @@
+# Modelfile for phi3-devops
+# Usage:
+#   ollama create phi3-devops -f Modelfile
+#   ollama run phi3-devops
+
+# Point to your GGUF file (adjust path to your 1TB HDD mount)
+FROM ./phi3-devops-q4.gguf
+
+# Context window — keep at 2048 for 8GB RAM
+PARAMETER num_ctx 2048
+
+# Sampling parameters
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER top_k 40
+PARAMETER repeat_penalty 1.1
+
+# Stop tokens for Alpaca format
+PARAMETER stop "### Instruction:"
+PARAMETER stop "### Response:"
+PARAMETER stop "<|end|>"
+PARAMETER stop "<|endoftext|>"
+
+SYSTEM """You are a precise and helpful DevOps assistant. You answer questions about Kubernetes, Docker, CI/CD, infrastructure, and cloud-native tools. Keep answers clear, accurate, and practical. Always include commands when relevant."""

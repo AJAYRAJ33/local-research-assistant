@@ -1,0 +1,34 @@
+# Task 01 - Fine-tuning
+transformers
+peft
+trl
+bitsandbytes
+accelerate
+datasets
+
+# Task 02 - Inference server
+fastapi
+uvicorn
+httpx
+
+# Task 03 - MCP server + vector store
+mcp
+chromadb
+sentence-transformers
+
+# Task 04 - Agent
+asyncio-mqtt
+
+# Task 05 - Orchestration UI
+gradio
+
+# Task 06 - CI/CD tooling
+rouge-score
+pytest
+ruff
+mypy
+
+# Shared utilities
+python-dotenv
+pydantic
+rich

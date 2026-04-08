@@ -1,0 +1,13 @@
+Helm is the package manager for Kubernetes. Charts are collections of YAML templates and a values.yaml file. helm install deploys a chart; helm upgrade updates it; helm rollback reverts to a previous release.
+
+A Helm chart directory structure: Chart.yaml (metadata), values.yaml (defaults), templates/ (Kubernetes manifests with Go templating). The {{ .Values.image.tag }} syntax references values, making charts reusable across environments.
+
+Helm repositories store and distribute charts. Public repos: Artifact Hub (aggregates community charts), Bitnami (production-grade charts). Private repos: Harbor, Nexus, or an S3 bucket. Use helm repo add to register repos and helm search to find charts.
+
+Helm hooks run Jobs at specific lifecycle points: pre-install, post-install, pre-upgrade, post-upgrade, pre-delete. Use them for database migrations before deployment, or for sending notifications after deployment completes.
+
+Helmfile manages multiple Helm releases across environments. A helmfile.yaml declares all releases, their charts, values files, and dependencies. helmfile sync applies all releases; helmfile diff shows pending changes before applying.
+
+Chart testing with helm lint validates chart syntax and structure. Helm unit testing with the helm-unittest plugin lets you write assertions on rendered templates. CI pipelines should lint and test charts before publishing to a repo.
+
+Kustomize is an alternative to Helm that uses pure YAML overlays without templating. You define a base configuration and environment-specific overlays (patches). kubectl apply -k applies a Kustomization. Some teams use both: Helm for third-party apps, Kustomize for their own.

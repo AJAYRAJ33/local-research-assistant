@@ -1,0 +1,13 @@
+Kubernetes is an open-source container orchestration platform that automates deployment, scaling, and management of containerized applications. It was originally designed by Google and is now maintained by the Cloud Native Computing Foundation (CNCF).
+
+A Kubernetes cluster consists of a control plane and worker nodes. The control plane manages the cluster state using components like the API server, etcd, scheduler, and controller manager. Worker nodes run the actual application workloads as pods.
+
+Pods are the smallest deployable units in Kubernetes. A pod can contain one or more containers that share the same network namespace and storage volumes. Pods are ephemeral — they can be created, destroyed, and replaced at any time.
+
+Deployments manage replica sets of pods and handle rolling updates. When you update a deployment, Kubernetes gradually replaces old pods with new ones, ensuring zero downtime. You can roll back to previous versions using kubectl rollout undo.
+
+Services provide stable network endpoints to pods. Since pod IPs change when pods restart, Services give a fixed IP and DNS name. ClusterIP is internal-only; NodePort exposes a port on every node; LoadBalancer provisions a cloud load balancer.
+
+ConfigMaps store configuration data as key-value pairs that pods can consume as environment variables or mounted files. Secrets store sensitive data like passwords and API tokens, also in key-value form but with additional access controls.
+
+Namespaces provide virtual clusters within a physical cluster, allowing teams to share resources while maintaining isolation. Resource quotas and LimitRanges can be applied per namespace to control resource consumption.

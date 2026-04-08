@@ -1,0 +1,13 @@
+Kubernetes security operates at multiple layers: cluster infrastructure, cluster network, workloads (pods/containers), and supply chain (images). Each layer requires different controls and tools.
+
+Role-Based Access Control (RBAC) is the primary authorization mechanism in Kubernetes. Roles define permissions (verbs on resources). RoleBindings associate roles with users, groups, or service accounts. Always follow the principle of least privilege.
+
+Pod Security Standards (PSS) define three profiles: Privileged (no restrictions), Baseline (minimal restrictions), and Restricted (heavily hardened). They're enforced via Pod Security Admission or policy engines like OPA/Gatekeeper or Kyverno.
+
+Image security involves scanning images for CVEs before deployment. Tools like Trivy, Snyk, and Clair integrate into CI pipelines. Image signing with Cosign (sigstore) ensures images come from trusted sources and haven't been tampered with.
+
+Secrets management: Kubernetes Secrets are base64-encoded (not encrypted) by default. For production, use envelope encryption at rest, or an external secrets manager (HashiCorp Vault, AWS Secrets Manager) synced into the cluster via External Secrets Operator.
+
+Network security uses NetworkPolicies to restrict pod communication, mTLS via service meshes for encrypted service-to-service traffic, and Ingress TLS for external traffic. Never expose the Kubernetes API server publicly without strict authentication.
+
+Audit logging records all API server requests: who requested what, when, and the outcome. Combined with tools like Falco for runtime threat detection, audit logs provide the forensic trail needed to investigate security incidents.

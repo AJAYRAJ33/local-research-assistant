@@ -1,0 +1,241 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/local-research-assistant
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # Stage 1: Lint & Type Check
+  # ─────────────────────────────────────────────────────────────
+  lint:
+    name: Lint & type check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install linting tools
+        run: pip install ruff mypy
+
+      - name: Ruff lint
+        run: ruff check . --output-format=github
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      - name: Mypy type check
+        run: mypy . --ignore-missing-imports --exclude "llama.cpp|merged-model"
+
+  # ─────────────────────────────────────────────────────────────
+  # Stage 2: Tests
+  # ─────────────────────────────────────────────────────────────
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+
+      - name: Run MCP tool tests
+        run: pytest tests/ -v --tb=short
+
+  # ─────────────────────────────────────────────────────────────
+  # Stage 3: Model Evaluation (CI eval with dummy/cached model)
+  # ─────────────────────────────────────────────────────────────
+  evaluate:
+    name: Model evaluation
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install evaluation deps
+        run: pip install rouge-score httpx
+
+      - name: Start Ollama (CPU mode)
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama serve &
+          sleep 10
+
+      - name: Pull lightweight test model
+        run: ollama pull tinyllama  # use tiny model for CI speed
+
+      - name: Run evaluation (low threshold for CI)
+        run: python evaluate.py --threshold 0.05
+        env:
+          OLLAMA_MODEL: tinyllama
+
+      - name: Upload evaluation results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results-${{ github.sha }}
+          path: eval_results.json
+          retention-days: 30
+
+  # ─────────────────────────────────────────────────────────────
+  # Stage 4: Docker Build & Push
+  # ─────────────────────────────────────────────────────────────
+  docker:
+    name: Build & push Docker images
+    runs-on: ubuntu-latest
+    needs: evaluate
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push inference server
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: inference_server/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME }}-inference:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push MCP server
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: mcp_server/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME }}-mcp:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push app
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME }}-app:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ─────────────────────────────────────────────────────────────
+  # Stage 5: Deploy (runs only on push to main)
+  # ─────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to server
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/local-research-assistant
+
+            # Pull latest images
+            export IMAGE_TAG=${{ github.sha }}
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+
+            docker pull ${DOCKERHUB_USERNAME}/local-research-assistant-inference:${IMAGE_TAG}
+            docker pull ${DOCKERHUB_USERNAME}/local-research-assistant-mcp:${IMAGE_TAG}
+            docker pull ${DOCKERHUB_USERNAME}/local-research-assistant-app:${IMAGE_TAG}
+
+            # Update .env with new tag
+            echo "IMAGE_TAG=${IMAGE_TAG}" > .env
+
+            # Rolling restart
+            docker-compose up -d --no-deps inference-server
+            sleep 10
+            docker-compose up -d --no-deps mcp-server
+            sleep 5
+            docker-compose up -d --no-deps app
+
+      - name: Health check (post-deploy)
+        id: healthcheck
+        run: |
+          sleep 20
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            http://${{ secrets.DEPLOY_HOST }}:8000/health || echo "000")
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          if [ "$STATUS" != "200" ]; then
+            echo "Health check failed with status $STATUS"
+            exit 1
+          fi
+          echo "Health check passed: $STATUS"
+
+      - name: Rollback on failure
+        if: failure() && steps.healthcheck.outcome == 'failure'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/local-research-assistant
+            # Revert to previous image tag stored in .env.previous
+            if [ -f .env.previous ]; then
+              cp .env.previous .env
+              docker-compose up -d
+              echo "Rolled back to previous version"
+            else
+              echo "No previous version to roll back to"
+            fi
